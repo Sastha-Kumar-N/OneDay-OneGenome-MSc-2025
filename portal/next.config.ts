@@ -6,6 +6,7 @@
 
 eslint:{
     ignoreDuringBuilds: true, during builds
+    
   }
      
 };
