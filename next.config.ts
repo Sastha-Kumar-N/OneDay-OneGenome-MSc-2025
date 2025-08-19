@@ -3,18 +3,17 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  // ✅ Don’t fail the Vercel build because of ESLint errors
+  // ✅ Don’t fail builds on ESLint errors
   eslint: {
     ignoreDuringBuilds: true,
   },
 
-  // (Optional) Don’t fail the build on TypeScript type errors in prod
-  // Useful while you refactor types; remove later for stricter CI.
+  // (optional) Don’t fail builds on TS type errors (remove later for strict CI)
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // (Optional) If you load remote images, configure domains here
+  // (optional) Add remote image domains here if you use next/image
   // images: { remotePatterns: [{ protocol: "https", hostname: "example.com" }] },
 };
 
