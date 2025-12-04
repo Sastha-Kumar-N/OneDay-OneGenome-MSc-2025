@@ -1,6 +1,5 @@
 "use client";
 
-// Map bits
 import {
   MapContainer,
   TileLayer,
@@ -17,6 +16,7 @@ const ForceGraph2D = dynamic<any>(() => import("react-force-graph-2d"), {
 });
 
 import React, { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Search,
   Database,
@@ -31,6 +31,9 @@ import {
   BookOpenText,
   Activity,
   Github,
+  Users,
+  Menu,
+  X,
 } from "lucide-react";
 
 // -------------------------------------------------------------
@@ -41,7 +44,7 @@ import {
 const MOCK_GENOMES = [
   {
     accession: "PGFR00000000",
-    organism: "Bordetella bronchiseptica",
+  organism: "Bordetella bronchiseptica",
     date: "2025-08-11",
     project: "One Day One Genome",
     ncbi: "https://www.ncbi.nlm.nih.gov/nuccore/PGFR00000000",
@@ -115,7 +118,7 @@ const ALLOWED_TABS = [
   "QC",
   "ETL",
   "Cases",
-] as const; // new tabs for teams A/B/F + JBrowse
+] as const;
 type TabKey = (typeof ALLOWED_TABS)[number];
 type SortKey = "date" | "organism" | "state" | "accession";
 type SortDir = "asc" | "desc";
@@ -209,7 +212,7 @@ function stateCounts(rows: any[]) {
   return Array.from(map.entries()).map(([state, value]) => ({ state, value }));
 }
 
-// AMR graph + novelty (Team C)
+// AMR graph + novelty
 function buildAmrGraph(
   rows: any[],
   mode: "genes" | "classes",
@@ -252,7 +255,6 @@ function buildAmrGraph(
   return { nodes, links };
 }
 function computeNovelty(rows: any[]) {
-  // rarity-based score: sum(1/freq) over AMR genes + BGC types
   const geneFreq = new Map<string, number>();
   const bgcFreq = new Map<string, number>();
   rows.forEach((r) =>
@@ -284,33 +286,21 @@ function computeNovelty(rows: any[]) {
     .sort((a, b) => b.score - a.score);
 }
 
-// ------------------------- UI PARTS (violet theme) --------------------------
-function ThemeToggle() {
-  const [dark, setDark] = React.useState(true);
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
-  return (
-    <button
-      onClick={() => setDark((d) => !d)}
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-violet-500/30 bg-white/5 text-white hover:bg-white/[0.08] transition"
-      title="Toggle theme"
-    >
-      {dark ? "🌙" : "☀️"} Theme
-    </button>
-  );
-}
-
+// ------------------------- UI PARTS (light violet theme) --------------------------
 function Section({ title, subtitle, children, icon: Icon }: any) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md p-6 shadow-[0_0_0_1px_rgba(139,92,246,.25),0_10px_30px_-10px_rgba(139,92,246,.4)]">
+    <section className="rounded-3xl border border-[#d0d9f5] bg-white p-6 shadow-md">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-xl bg-violet-500/15 border border-violet-400/20">
-          <Icon className="w-5 h-5 text-violet-300" />
+        <div className="p-2 rounded-xl bg-[#e4effe] border border-transparent">
+          <Icon className="w-5 h-5 text-[#5d2ab7]" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold">{title}</h2>
-          {subtitle && <p className="text-sm text-zinc-400">{subtitle}</p>}
+          <h2 className="text-lg font-semibold text-[#111111]">{title}</h2>
+          {subtitle && (
+            <p className="text-sm text-gray-600 leading-relaxed">
+              {subtitle}
+            </p>
+          )}
         </div>
       </div>
       {children}
@@ -320,18 +310,24 @@ function Section({ title, subtitle, children, icon: Icon }: any) {
 
 function StatCard({ icon: Icon, label, value, note }: any) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-[0_0_0_1px_rgba(139,92,246,.2),0_10px_30px_-10px_rgba(139,92,246,.35)] hover:border-violet-400/25 transition">
+    <div className="rounded-2xl border border-[#d0d9f5] bg-white p-5 shadow-sm hover:shadow-md transition">
       <div className="flex items-start gap-4">
-        <div className="p-2 rounded-xl bg-violet-500/15 border border-violet-400/20">
+        <div className="p-2 rounded-xl bg-[#e4effe]">
           <ShieldCheck className="hidden" />
-          <Icon className="w-5 h-5 text-violet-300" />
+          <Icon className="w-5 h-5 text-[#5d2ab7]" />
         </div>
         <div className="flex-1">
-          <div className="text-sm text-zinc-400">{label}</div>
-          <div className="text-2xl font-bold tracking-tight text-white">
+          <div className="text-xs font-medium tracking-wide text-gray-500 uppercase">
+            {label}
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-[#111111] mt-1">
             {value}
           </div>
-          {note && <div className="text-xs text-zinc-500 mt-1">{note}</div>}
+          {note && (
+            <div className="text-xs text-gray-500 mt-1 leading-relaxed">
+              {note}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -340,7 +336,7 @@ function StatCard({ icon: Icon, label, value, note }: any) {
 
 function Badge({ children }: any) {
   return (
-    <span className="px-2 py-0.5 text-xs rounded-full bg-white/[0.06] text-zinc-200 border border-white/10">
+    <span className="px-2 py-0.5 text-xs rounded-full bg-[#e4effe] text-[#111111]">
       {children}
     </span>
   );
@@ -348,7 +344,7 @@ function Badge({ children }: any) {
 
 function Pill({ children }: any) {
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-violet-500/10 text-violet-200 border border-violet-400/20">
+    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-[#5d2ab7]/10 text-[#5d2ab7] border border-[#5d2ab7]/40">
       {children}
     </span>
   );
@@ -386,7 +382,7 @@ function Table({
   }) => (
     <button
       type="button"
-      className="inline-flex items-center gap-1 hover:underline"
+      className="inline-flex items-center gap-1 hover:text-[#5d2ab7] transition text-sm font-medium"
       onClick={() => onSort(k)}
       title="Sort"
     >
@@ -396,11 +392,11 @@ function Table({
   );
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/10">
+    <div className="overflow-x-auto rounded-xl border border-[#d0d9f5]">
       <table className="w-full text-sm">
-        <thead className="text-left text-zinc-400 bg-white/[0.04]">
+        <thead className="text-left text-gray-600 bg-[#e4effe]">
           <tr>
-            <th className="py-2 pr-4">
+            <th className="py-2 pr-4 pl-3">
               <HeaderBtn k="accession">Accession</HeaderBtn>
             </th>
             <th className="py-2 pr-4">
@@ -418,14 +414,14 @@ function Table({
             <th className="py-2 pr-4">NCBI</th>
           </tr>
         </thead>
-        <tbody className="[&>tr]:border-t [&>tr]:border-white/10">
+        <tbody className="[&>tr]:border-t [&>tr]:border-[#eef1ff] bg-white">
           {rows.map((r) => (
-            <tr key={r.accession}>
-              <td className="py-2 pr-4 font-mono text-xs text-zinc-200">
+            <tr key={r.accession} className="hover:bg-[#f5f6ff]">
+              <td className="py-2 pr-4 pl-3 font-mono text-xs text-gray-800">
                 {r.accession}
               </td>
-              <td className="py-2 pr-4">{r.organism}</td>
-              <td className="py-2 pr-4">{r.date}</td>
+              <td className="py-2 pr-4 text-[#111111]">{r.organism}</td>
+              <td className="py-2 pr-4 text-gray-700">{r.date}</td>
               <td className="py-2 pr-4">
                 <Badge>{r.project}</Badge>
               </td>
@@ -445,12 +441,12 @@ function Table({
                   ))}
                 </div>
               </td>
-              <td className="py-2 pr-4">
+              <td className="py-2 pr-4 text-gray-700">
                 {r.district}, {r.state}
               </td>
               <td className="py-2 pr-4">
                 <a
-                  className="inline-flex items-center gap-1 text-violet-300 hover:underline"
+                  className="inline-flex items-center gap-1 text-[#5d2ab7] hover:underline"
                   href={r.ncbi}
                   target="_blank"
                   rel="noreferrer"
@@ -468,11 +464,11 @@ function Table({
 
 function Empty({ label }: any) {
   return (
-    <div className="text-center py-16 text-zinc-400">
-      <div className="mx-auto w-14 h-14 rounded-2xl bg-white/[0.06] grid place-items-center mb-3">
-        <Database className="w-6 h-6 text-violet-300" />
+    <div className="text-center py-16 text-gray-500">
+      <div className="mx-auto w-14 h-14 rounded-2xl bg-[#e4effe] grid place-items-center mb-3">
+        <Database className="w-6 h-6 text-[#5d2ab7]" />
       </div>
-      <div className="font-medium">{label}</div>
+      <div className="font-medium text-[#111111] mb-1">{label}</div>
       <div className="text-sm">No data to display yet.</div>
     </div>
   );
@@ -502,11 +498,14 @@ function Modal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+      <div className="w-full max-w-2xl rounded-2xl border border-[#d0d9f5] bg-white p-5 shadow-xl">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <button onClick={onClose} className="text-zinc-300 hover:text-white">
+          <h3 className="text-lg font-semibold text-[#111111]">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-[#111111]"
+          >
             ✕
           </button>
         </div>
@@ -534,6 +533,9 @@ export function BharatGenomeResourcePortal() {
   const [uOpen, setUOpen] = useState(false);
   const [uFiles, setUFiles] = useState<File[]>([]);
   const [uMessage, setUMessage] = useState<string>("");
+
+  // Navbar (mobile)
+  const [navOpen, setNavOpen] = useState(false);
 
   // Filtering + sorting -> rows
   const rows = useMemo(() => {
@@ -631,7 +633,7 @@ export function BharatGenomeResourcePortal() {
     );
   }, [query, stateFilter, amrClassFilter, tab, sortKey, sortDir, admin]);
 
-  // ----- Upload handlers (Team A students) -----
+  // ----- Upload handlers -----
   async function handleStudentUpload() {
     if (!uFiles.length) {
       setUMessage("Please choose at least one file.");
@@ -640,7 +642,6 @@ export function BharatGenomeResourcePortal() {
     try {
       const fd = new FormData();
       uFiles.forEach((f) => fd.append("files", f));
-      // Backend endpoint to implement by Team E: POST /api/ingest
       const res = await fetch("/api/ingest", { method: "POST", body: fd });
       if (!res.ok) throw new Error("Upload failed");
       setUMessage("Uploaded! ETL will pick this up for validation.");
@@ -651,44 +652,162 @@ export function BharatGenomeResourcePortal() {
   }
 
   return (
-    <main className="min-h-screen text-white bg-transparent selection:bg-violet-500/30">
-      {/* background deco */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background:
-              "radial-gradient(1200px 600px at 90% -10%, rgba(139,92,246,.25), transparent 60%), radial-gradient(800px 400px at 10% 0%, rgba(139,92,246,.15), transparent 55%), #0b0b10",
-          }}
-        />
-      </div>
+    <main className="min-h-screen bg-[#e4effe] text-[#111111] selection:bg-[#5d2ab7]/20">
+      {/* NAVBAR */}
+      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-[#d0d9f5]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: logo + name */}
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-2">
+                {/* Update src to your actual BGDB logo path */}
+                <img
+                  src="/BGDB-index-files/Logo/BGDBlogovertical.png"
+                  alt="Bharat Genome Database"
+                  className="h-9 w-auto"
+                />
+                <div className="leading-tight">
+                  <span className="block text-sm font-semibold tracking-tight">
+                    Bharat Genome Database
+                  </span>
+                  <span className="block text-xs text-gray-500">
+                    Harmonized Genome & Microbiome Portal
+                  </span>
+                </div>
+              </Link>
+            </div>
 
-      {/* Header */}
-      <header className="max-w-7xl mx-auto px-6 pt-10 pb-6">
-        <div className="flex items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-                Harmonized Microbial Genomes Atlas of One Day One Genome Project
-              </h1>
-              <p className="text-zinc-400 text-sm mt-1">
-                Powered by Bharat Genome Database ODOG-aligned
-              </p>
+            {/* Desktop links */}
+            <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+              <a
+                href="#about"
+                className="text-gray-700 hover:text-[#5d2ab7] transition"
+              >
+                About
+              </a>
+              <a
+                href="#team"
+                className="text-gray-700 hover:text-[#5d2ab7] transition"
+              >
+                Team
+              </a>
+              <a
+                href="#research"
+                className="text-gray-700 hover:text-[#5d2ab7] transition"
+              >
+                Research
+              </a>
+              <a
+                href="#portal"
+                className="text-gray-700 hover:text-[#5d2ab7] transition"
+              >
+                Resource Portal
+              </a>
+              {admin && (
+                <button
+                  onClick={() => setUOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5d2ab7] text-white text-xs font-medium shadow-sm hover:bg-[#4a1f96] transition"
+                >
+                  <FileUp className="w-4 h-4" />
+                  Student Upload
+                </button>
+              )}
+            </div>
+
+            {/* Mobile toggle */}
+            <button
+              className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-600 hover:text-[#111111] hover:bg-[#e4effe] transition"
+              onClick={() => setNavOpen((o) => !o)}
+              aria-label="Toggle navigation"
+            >
+              {navOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {navOpen && (
+          <div className="md:hidden border-t border-[#d0d9f5] bg-white">
+            <div className="px-4 py-3 space-y-2 text-sm font-medium">
+              <a
+                href="#about"
+                className="block text-gray-700 hover:text-[#5d2ab7] transition"
+                onClick={() => setNavOpen(false)}
+              >
+                About
+              </a>
+              <a
+                href="#team"
+                className="block text-gray-700 hover:text-[#5d2ab7] transition"
+                onClick={() => setNavOpen(false)}
+              >
+                Team
+              </a>
+              <a
+                href="#research"
+                className="block text-gray-700 hover:text-[#5d2ab7] transition"
+                onClick={() => setNavOpen(false)}
+              >
+                Research
+              </a>
+              <a
+                href="#portal"
+                className="block text-gray-700 hover:text-[#5d2ab7] transition"
+                onClick={() => setNavOpen(false)}
+              >
+                Resource Portal
+              </a>
+              {admin && (
+                <button
+                  onClick={() => {
+                    setNavOpen(false);
+                    setUOpen(true);
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5d2ab7] text-white text-xs font-medium shadow-sm hover:bg-[#4a1f96] transition"
+                >
+                  <FileUp className="w-4 h-4" />
+                  Student Upload
+                </button>
+              )}
             </div>
           </div>
+        )}
+      </nav>
 
-          <div className="flex items-center gap-2">
-            {admin && (
-              <button
-                onClick={() => setUOpen(true)}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-violet-500/30 bg-white/5 hover:bg-white/[0.08]"
-                title="Student Upload"
-              >
-                <FileUp className="w-4 h-4" />
-                Student Upload
-              </button>
-            )}
-            <ThemeToggle />
+      {/* Hero / About */}
+      <header
+        id="about"
+        className="max-w-7xl mx-auto px-6 pt-10 pb-8 flex flex-col lg:flex-row gap-8 items-start lg:items-center"
+      >
+        <div className="flex-1 space-y-3">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-xs font-medium text-[#5d2ab7] border border-[#d0d9f5] shadow-sm">
+            <Database className="w-3 h-3" />
+            One Day One Genome · Microbial Atlas
+          </span>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-semibold tracking-tight text-[#111111]">
+            Harmonized Microbial Genomes Atlas for the One Day One Genome
+            Initiative
+          </h1>
+          <p className="text-sm md:text-base text-gray-600 leading-relaxed max-w-2xl">
+            Explore curated assemblies, AMR markers, biosynthetic gene clusters
+            and phylogeography from Indian microbial genomes, powered by the
+            Bharat Genome Database.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <a
+              href="#portal"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#5d2ab7] text-white text-sm font-medium shadow hover:bg-[#4a1f96] transition"
+            >
+              <Search className="w-4 h-4" />
+              Explore genomes
+            </a>
+            <a
+              href="#research"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white text-[#111111] text-sm font-medium border border-[#d0d9f5] hover:bg-[#f4f6ff] transition"
+            >
+              <BookOpenText className="w-4 h-4" />
+              View research context
+            </a>
           </div>
         </div>
       </header>
@@ -714,16 +833,19 @@ export function BharatGenomeResourcePortal() {
           icon={MapPinned}
           label="States Covered"
           value={uniq(MOCK_GENOMES.map((r) => r.state)).length}
-          note="Growing daily"
+          note="Expanding across the Indian microbial landscape"
         />
       </section>
 
-      {/* Controls */}
-      <section className="max-w-7xl mx-auto px-6 mt-6 flex flex-col md:flex-row gap-3">
+      {/* Filters / Controls */}
+      <section
+        id="portal"
+        className="max-w-7xl mx-auto px-6 mt-6 flex flex-col md:flex-row gap-3"
+      >
         <div className="flex-1 relative">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-zinc-400" />
+          <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
           <input
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/5 ring-1 ring-white/10 outline-none focus:ring-violet-400/60"
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#d0d9f5] outline-none focus:ring-2 focus:ring-[#5d2ab7] focus:border-transparent text-sm"
             placeholder="Search accession, organism, AMR, BGC, state…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -732,7 +854,7 @@ export function BharatGenomeResourcePortal() {
 
         {/* State */}
         <select
-          className="md:w-64 px-3 py-2 rounded-xl bg-white/5 ring-1 ring-white/10"
+          className="md:w-64 px-3 py-2 rounded-xl bg-white border border-[#d0d9f5] text-sm focus:ring-2 focus:ring-[#5d2ab7] focus:border-transparent"
           value={stateFilter}
           onChange={(e) => setStateFilter(e.target.value)}
         >
@@ -745,7 +867,7 @@ export function BharatGenomeResourcePortal() {
 
         {/* AMR Class */}
         <select
-          className="md:w-64 px-3 py-2 rounded-xl bg-white/5 ring-1 ring-white/10"
+          className="md:w-64 px-3 py-2 rounded-xl bg-white border border-[#d0d9f5] text-sm focus:ring-2 focus:ring-[#5d2ab7] focus:border-transparent"
           value={amrClassFilter}
           onChange={(e) => setAmrClassFilter(e.target.value)}
         >
@@ -760,20 +882,22 @@ export function BharatGenomeResourcePortal() {
 
       {/* Tabs */}
       <section className="max-w-7xl mx-auto px-6 mt-6">
-        <div className="flex gap-1 flex-wrap border-b border-white/10">
+        <div className="flex gap-1 flex-wrap border-b border-[#d0d9f5]">
           {ALLOWED_TABS.map((t) => {
             const active = tab === t;
             return (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`relative px-3 py-2 text-sm transition ${
-                  active ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+                className={`relative px-3 py-2 text-sm transition font-medium ${
+                  active
+                    ? "text-[#5d2ab7]"
+                    : "text-gray-500 hover:text-[#111111]"
                 }`}
               >
                 {t}
                 <span
-                  className={`absolute left-0 right-0 -bottom-px h-0.5 bg-violet-500 transition-transform ${
+                  className={`absolute left-0 right-0 -bottom-[1px] h-0.5 bg-[#5d2ab7] transition-transform ${
                     active ? "scale-x-100" : "scale-x-0"
                   } origin-left`}
                 />
@@ -783,6 +907,7 @@ export function BharatGenomeResourcePortal() {
         </div>
       </section>
 
+      {/* Main content grid */}
       <div className="max-w-7xl mx-auto px-6 mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6 pb-16">
         {/* Left: main content */}
         <div className="lg:col-span-2 space-y-6">
@@ -791,7 +916,7 @@ export function BharatGenomeResourcePortal() {
             <Section
               icon={Database}
               title="Genomes"
-              subtitle="Harmonized metadata of Indian microbial genomes."
+              subtitle="Harmonized metadata of Indian microbial genomes from ODOG and related projects."
             >
               {rows.length ? (
                 <Table
@@ -806,30 +931,30 @@ export function BharatGenomeResourcePortal() {
             </Section>
           )}
 
-          {/* AMR (Team C) */}
+          {/* AMR */}
           {tab === "AMR" && (
             <Section
               icon={ShieldCheck}
               title="Antimicrobial Resistance (AMR)"
-              subtitle="Organism-to-organism semantic graph by shared resistance + novelty."
+              subtitle="Organism-to-organism graph of shared resistance markers, with rarity-driven novelty scores."
             >
               {rows.length ? (
                 <div className="space-y-4">
                   {/* Graph controls */}
                   <div className="flex flex-col md:flex-row gap-3 md:items-center">
-                    <div className="text-sm text-zinc-400">
-                      {rows.length} genomes · linking organisms that share{" "}
-                      <span className="font-medium text-zinc-200">
+                    <div className="text-sm text-gray-600">
+                      {rows.length} genomes, linking organisms that share{" "}
+                      <span className="font-medium text-[#111111]">
                         {amrGraphMode === "genes" ? "AMR genes" : "AMR classes"}
                       </span>
                       .
                     </div>
 
                     <div className="flex gap-3 md:ml-auto">
-                      <label className="inline-flex items-center gap-2 text-sm">
+                      <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                         <span>Mode</span>
                         <select
-                          className="px-2 py-1 rounded-lg bg-white/5 ring-1 ring-white/10"
+                          className="px-2 py-1 rounded-lg bg-white border border-[#d0d9f5] text-xs"
                           value={amrGraphMode}
                           onChange={(e) =>
                             setAmrGraphMode(
@@ -842,7 +967,7 @@ export function BharatGenomeResourcePortal() {
                         </select>
                       </label>
 
-                      <label className="inline-flex items-center gap-2 text-sm">
+                      <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                         <span>Min shared</span>
                         <input
                           type="number"
@@ -852,14 +977,14 @@ export function BharatGenomeResourcePortal() {
                           onChange={(e) =>
                             setMinShared(parseInt(e.target.value || "1", 10))
                           }
-                          className="w-20 px-2 py-1 rounded-lg bg-white/5 ring-1 ring-white/10"
+                          className="w-20 px-2 py-1 rounded-lg bg-white border border-[#d0d9f5] text-xs"
                         />
                       </label>
                     </div>
                   </div>
 
                   {/* Graph */}
-                  <div className="h-96 rounded-2xl overflow-hidden border border-white/10 bg-white/[0.04]">
+                  <div className="h-96 rounded-2xl overflow-hidden border border-[#d0d9f5] bg-white">
                     {amrGraph.nodes.length > 0 ? (
                       <ForceGraph2D
                         graphData={amrGraph as any}
@@ -884,17 +1009,17 @@ export function BharatGenomeResourcePortal() {
                           const size = 6 + Math.log2((node.val || 1) + 1) * 4;
                           ctx.beginPath();
                           ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-                          ctx.fillStyle = "#8b5cf6"; // violet
+                          ctx.fillStyle = "#5d2ab7";
                           ctx.fill();
                           const fontSize = Math.max(8, 12 / scale);
                           ctx.font = `${fontSize}px sans-serif`;
-                          ctx.fillStyle = "#e5e7eb"; // zinc-200
+                          ctx.fillStyle = "#111111";
                           ctx.fillText(label, node.x + size + 3, node.y + 3);
                         }}
                         cooldownTicks={80}
                       />
                     ) : (
-                      <div className="h-full grid place-items-center text-sm text-zinc-400">
+                      <div className="h-full grid place-items-center text-sm text-gray-500">
                         No links at this threshold. Lower “Min shared”.
                       </div>
                     )}
@@ -902,11 +1027,11 @@ export function BharatGenomeResourcePortal() {
 
                   {/* Novelty & chips */}
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="rounded-2xl bg-white/[0.04] p-4 border border-white/10">
-                      <div className="font-medium mb-2">
-                        Top novelty (AMR+BGC rarity)
+                    <div className="rounded-2xl bg-white p-4 border border-[#d0d9f5]">
+                      <div className="font-medium mb-2 text-[#111111]">
+                        Top novelty (AMR + BGC rarity)
                       </div>
-                      <ul className="space-y-2 text-sm">
+                      <ul className="space-y-2 text-sm text-gray-700">
                         {novelty.slice(0, 6).map((n) => (
                           <li key={n.acc} className="flex justify-between">
                             <span className="truncate pr-3">
@@ -917,8 +1042,8 @@ export function BharatGenomeResourcePortal() {
                         ))}
                       </ul>
                     </div>
-                    <div className="rounded-2xl bg-white/[0.04] p-4 border border-white/10">
-                      <div className="font-medium mb-2">
+                    <div className="rounded-2xl bg-white p-4 border border-[#d0d9f5]">
+                      <div className="font-medium mb-2 text-[#111111]">
                         Recent{" "}
                         {amrGraphMode === "genes" ? "AMR genes" : "AMR classes"}
                       </div>
@@ -945,11 +1070,11 @@ export function BharatGenomeResourcePortal() {
             <Section
               icon={MapPinned}
               title="Phylogeography"
-              subtitle="Map view of current results."
+              subtitle="Map view of the filtered genomes across India."
             >
               {rows.length ? (
                 <div className="space-y-4">
-                  <div className="h-80 rounded-2xl overflow-hidden border border-white/10">
+                  <div className="h-80 rounded-2xl overflow-hidden border border-[#d0d9f5] bg-white">
                     <MapContainer
                       center={[22.5, 79]}
                       zoom={5}
@@ -970,17 +1095,17 @@ export function BharatGenomeResourcePortal() {
                           key={r.accession}
                           center={[r.lat, r.lon]}
                           radius={6}
-                          pathOptions={{ color: "#8b5cf6", fillOpacity: 0.6 }}
+                          pathOptions={{ color: "#5d2ab7", fillOpacity: 0.6 }}
                         >
                           <Popup>
-                            <div className="text-sm text-zinc-900">
+                            <div className="text-sm text-[#111111]">
                               <div className="font-medium">{r.organism}</div>
                               <div>Accession: {r.accession}</div>
                               <div>
                                 {r.district}, {r.state}
                               </div>
                               <a
-                                className="text-violet-700 underline"
+                                className="text-[#5d2ab7] underline"
                                 href={r.ncbi}
                                 target="_blank"
                                 rel="noreferrer"
@@ -993,9 +1118,9 @@ export function BharatGenomeResourcePortal() {
                       ))}
                     </MapContainer>
                   </div>
-                  <div className="text-xs text-zinc-400">
-                    Tip: markers reflect the currently filtered rows. Use the
-                    search box and state filter above to update the map.
+                  <div className="text-xs text-gray-600">
+                    Markers reflect the currently filtered rows. Use the search
+                    box and state filter above to refine the map.
                   </div>
                 </div>
               ) : (
@@ -1004,19 +1129,19 @@ export function BharatGenomeResourcePortal() {
             </Section>
           )}
 
-          {/* JBrowse (embed now; swap to your instance later) */}
+          {/* JBrowse */}
           {tab === "JBrowse" && (
             <Section
               icon={BookOpenText}
               title="Genome Browser (JBrowse)"
-              subtitle="Lightweight embed; point to your configured JBrowse session."
+              subtitle="Embed your curated JBrowse sessions for genome-scale exploration."
             >
               {rows.length ? (
                 <div className="space-y-3">
-                  <div className="text-sm text-zinc-400">
-                    Pick an accession to open in your JBrowse instance
-                    (configure the iframe URL to your backend). For demo, this
-                    uses a placeholder.
+                  <div className="text-sm text-gray-600">
+                    Pick an accession to open in your JBrowse instance (configure
+                    the iframe URL in the backend). A placeholder URL is used
+                    here for the demo.
                   </div>
                   <JBrowseEmbed rows={rows} />
                 </div>
@@ -1026,12 +1151,12 @@ export function BharatGenomeResourcePortal() {
             </Section>
           )}
 
-          {/* QC (Team B) */}
+          {/* QC */}
           {tab === "QC" && (
             <Section
               icon={Activity}
               title="QC & Re-annotation"
-              subtitle="Uniform GFF/GBK/FAA artifacts + assembly metrics."
+              subtitle="Uniform GFF/GBK/FAA artifacts and assembly metrics."
             >
               {rows.length ? (
                 <div className="space-y-4">
@@ -1039,43 +1164,45 @@ export function BharatGenomeResourcePortal() {
                     {rows.map((r) => (
                       <div
                         key={r.accession}
-                        className="rounded-2xl border border-white/10 p-4 bg-white/[0.04]"
+                        className="rounded-2xl border border-[#d0d9f5] p-4 bg-white"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="font-medium">{r.organism}</div>
+                          <div className="font-medium text-[#111111]">
+                            {r.organism}
+                          </div>
                           <Badge>{r.accession}</Badge>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                          <div className="text-zinc-400">N50</div>
+                          <div className="text-gray-500">N50</div>
                           <div>—</div>
-                          <div className="text-zinc-400">GC%</div>
+                          <div className="text-gray-500">GC%</div>
                           <div>—</div>
-                          <div className="text-zinc-400"># Contigs</div>
+                          <div className="text-gray-500"># Contigs</div>
                           <div>—</div>
-                          <div className="text-zinc-400">BUSCO</div>
+                          <div className="text-gray-500">BUSCO</div>
                           <div>—</div>
                         </div>
-                        <div className="mt-3 flex gap-2 flex-wrap">
+                        <div className="mt-3 flex gap-2 flex-wrap text-sm">
                           <a
-                            className="underline text-violet-300"
+                            className="underline text-[#5d2ab7]"
                             href={`/api/artifacts/gff?acc=${r.accession}`}
                           >
                             GFF
                           </a>
                           <a
-                            className="underline text-violet-300"
+                            className="underline text-[#5d2ab7]"
                             href={`/api/artifacts/gbk?acc=${r.accession}`}
                           >
                             GBK
                           </a>
                           <a
-                            className="underline text-violet-300"
+                            className="underline text-[#5d2ab7]"
                             href={`/api/artifacts/faa?acc=${r.accession}`}
                           >
                             FAA
                           </a>
                           <a
-                            className="underline text-violet-300"
+                            className="underline text-[#5d2ab7]"
                             href={`/api/artifacts/qc?acc=${r.accession}`}
                           >
                             QC JSON
@@ -1084,11 +1211,10 @@ export function BharatGenomeResourcePortal() {
                       </div>
                     ))}
                   </div>
-                  <div className="text-xs text-zinc-400">
-                    Team B endpoint examples to implement:{" "}
-                    <code>/api/artifacts/*</code>
-                    returning signed URLs or files. Populate metrics above from
-                    your QC JSON.
+                  <div className="text-xs text-gray-600">
+                    Backend suggestion: <code>/api/artifacts/*</code> endpoints
+                    returning signed URLs or files. Populate the metrics above
+                    from your QC JSON.
                   </div>
                 </div>
               ) : (
@@ -1097,12 +1223,12 @@ export function BharatGenomeResourcePortal() {
             </Section>
           )}
 
-          {/* ETL Monitor (Team A) */}
+          {/* ETL */}
           {tab === "ETL" && (
             <Section
               icon={RefreshCw}
               title="ETL & Metadata Monitor"
-              subtitle="Scraper status, MIxS validation, accession resolver."
+              subtitle="Scraper status, MIxS validation and accession resolution."
             >
               <div className="grid md:grid-cols-3 gap-4">
                 <InfoCard k="Last run" v="—" />
@@ -1110,10 +1236,10 @@ export function BharatGenomeResourcePortal() {
                 <InfoCard k="MIxS validation errors" v="—" />
               </div>
 
-              <div className="mt-4 rounded-2xl border border-white/10 p-4 bg-white/[0.04]">
-                <div className="text-sm text-zinc-400 mb-2">
+              <div className="mt-4 rounded-2xl border border-[#d0d9f5] p-4 bg-white">
+                <div className="text-sm text-gray-600 mb-2">
                   Trigger a manual scrape (stub; implement POST{" "}
-                  <code>/api/etl/run</code>)
+                  <code>/api/etl/run</code> in the backend).
                 </div>
                 <button
                   onClick={async () => {
@@ -1127,12 +1253,12 @@ export function BharatGenomeResourcePortal() {
                       alert("This is a stub. Implement /api/etl/run");
                     }
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white hover:bg-violet-500"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#5d2ab7] text-white text-sm font-medium hover:bg-[#4a1f96] transition"
                 >
                   <RefreshCw className="w-4 h-4" /> Run now
                 </button>
                 <a
-                  className="ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 hover:bg-white/[0.06]"
+                  className="ml-3 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#d0d9f5] text-sm text-[#111111] hover:bg-[#f4f6ff] transition"
                   href="https://nibmg.ac.in"
                   target="_blank"
                   rel="noreferrer"
@@ -1141,25 +1267,25 @@ export function BharatGenomeResourcePortal() {
                 </a>
               </div>
 
-              <div className="mt-4 text-xs text-zinc-400">
-                Team A endpoints: <code>GET /api/etl/status</code>,{" "}
+              <div className="mt-4 text-xs text-gray-600">
+                Suggested endpoints: <code>GET /api/etl/status</code>,{" "}
                 <code>POST /api/etl/run</code>, <code>GET /api/etl/errors</code>
                 . MIxS validator: <code>POST /api/etl/validate</code>.
               </div>
             </Section>
           )}
 
-          {/* Case Studies (Team F) */}
+          {/* Cases */}
           {tab === "Cases" && (
             <Section
               icon={BookOpenText}
               title="Case Studies & Writing"
-              subtitle="Curation, figures, and paper prep."
+              subtitle="Curated stories, figures and paper-ready snippets from the Atlas."
             >
               <div className="space-y-4">
                 <CaseCard
                   title="Bordetella bronchiseptica PGFR00000000"
-                  body="AMR set includes aac(3)-IIa, blaOXA-60, tetA; see ODOG daily context. Link out to JBrowse and QC."
+                  body="AMR set includes aac(3)-IIa, blaOXA-60, tetA. Link out to QC and your JBrowse tracks for ODOG daily reporting."
                   links={[
                     {
                       label: "NCBI",
@@ -1170,15 +1296,15 @@ export function BharatGenomeResourcePortal() {
                 />
                 <CaseCard
                   title="Aeromonas caviae INS0005101"
-                  body="Resolve accession → harmonize MIxS; preliminary AMR screen; local riverine sampling context."
+                  body="Resolve accession, harmonize MIxS metadata and integrate preliminary AMR screening in a riverine context."
                   links={[
                     { label: "Project page", href: "https://nibmg.ac.in" },
                   ]}
                 />
-                <div className="text-xs text-zinc-400">
-                  Team F endpoint for Markdown cases:{" "}
-                  <code>GET /api/cases</code> (list) and{" "}
-                  <code>GET /api/cases/{`{id}`}</code> (markdown/HTML).
+                <div className="text-xs text-gray-600">
+                  Backend idea for Team F:{" "}
+                  <code>GET /api/cases</code> (list of cases) and{" "}
+                  <code>GET /api/cases/{"{id}"}</code> (Markdown/HTML).
                 </div>
               </div>
             </Section>
@@ -1190,7 +1316,7 @@ export function BharatGenomeResourcePortal() {
           <Section
             icon={Database}
             title="Download"
-            subtitle="Get current view as JSON/CSV."
+            subtitle="Export the current filtered view as JSON or CSV."
           >
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -1205,7 +1331,7 @@ export function BharatGenomeResourcePortal() {
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white hover:bg-violet-500"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#5d2ab7] text-white text-sm font-medium hover:bg-[#4a1f96] transition"
               >
                 <Download className="w-4 h-4" /> JSON
               </button>
@@ -1213,7 +1339,7 @@ export function BharatGenomeResourcePortal() {
                 onClick={() =>
                   downloadBlob(toCSV(rows), "bharatgenome_view.csv", "text/csv")
                 }
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white text-zinc-900 hover:opacity-90"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white text-[#111111] text-sm font-medium border border-[#d0d9f5] hover:bg-[#f4f6ff] transition"
               >
                 <Download className="w-4 h-4" /> CSV
               </button>
@@ -1222,7 +1348,7 @@ export function BharatGenomeResourcePortal() {
 
           <Section icon={FlaskConical} title="BGC Types (filtered)">
             {bgcData.length ? (
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-2 text-sm text-gray-700">
                 {bgcData.map((d) => (
                   <li
                     key={d.name}
@@ -1240,7 +1366,7 @@ export function BharatGenomeResourcePortal() {
 
           <Section icon={MapPinned} title="Coverage by State (filtered)">
             {geoData.length ? (
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-2 text-sm text-gray-700">
                 {geoData.map((d) => (
                   <li
                     key={d.state}
@@ -1258,16 +1384,48 @@ export function BharatGenomeResourcePortal() {
         </div>
       </div>
 
+      {/* About Team & Research sections for nav anchors */}
+      <section
+        id="team"
+        className="max-w-7xl mx-auto px-6 pb-10 grid md:grid-cols-2 gap-6"
+      >
+        <Section
+          icon={Users}
+          title="The BGDB Team"
+          subtitle="Interdisciplinary microbiologists, bioinformaticians and engineers building a national-scale microbial atlas."
+        >
+          <p className="text-sm text-gray-700 leading-relaxed">
+            The Bharat Genome Database team brings together expertise from
+            clinical microbiology, environmental microbiology, genomics, data
+            engineering and AI. The ODOG initiative is co-developed with
+            partner institutes and hospital networks across India.
+          </p>
+        </Section>
+        <Section
+          id="research"
+          icon={FlaskConical}
+          title="Research & Collaborations"
+          subtitle="Built for comparative genomics, AMR surveillance and discovery of novel biosynthetic pathways."
+        >
+          <p className="text-sm text-gray-700 leading-relaxed">
+            Use this portal to seed cohort-level analyses, generate figures for
+            manuscripts and rapidly discover interesting genomes for follow-up
+            wet-lab work. Collaborations are welcome for joint projects on AMR,
+            One Health surveillance and microbiome-based interventions.
+          </p>
+        </Section>
+      </section>
+
       {/* Student Upload Modal (admin only) */}
       <Modal
         open={uOpen}
         onClose={() => setUOpen(false)}
         title="Student Upload Wizard"
       >
-        <div className="text-sm text-zinc-300">
-          Upload <b>CSV/TSV</b> (metadata in MIxS-like schema) and/or{" "}
-          <b>JSON</b> (QC/AMR/BGC results). Team A will validate and queue ETL.
-          Use the provided templates.
+        <div className="text-sm text-gray-700">
+          Upload <b>CSV/TSV</b> (metadata in a MIxS-like schema) and/or{" "}
+          <b>JSON</b> (QC/AMR/BGC results). The ETL pipeline will validate and
+          queue these records. Use the template as a starting point.
         </div>
         <div className="mt-3">
           <input
@@ -1275,18 +1433,18 @@ export function BharatGenomeResourcePortal() {
             type="file"
             accept=".csv,.tsv,.json"
             onChange={(e) => setUFiles(Array.from(e.target.files || []))}
-            className="block w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-violet-600 file:text-white file:hover:bg-violet-500"
+            className="block w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-[#5d2ab7] file:text-white file:hover:bg-[#4a1f96] file:cursor-pointer"
           />
-          <div className="text-xs text-zinc-400 mt-2">
+          <div className="text-xs text-gray-600 mt-2">
             API: <code>POST /api/ingest</code> → returns{" "}
-            <code>{`{ jobId }`}</code>. Then Team A ETL moves data → Postgres &
+            <code>{"{ jobId }"}</code>. ETL then moves data into Postgres and
             object storage.
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex items-center gap-2 flex-wrap">
           <button
             onClick={handleStudentUpload}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 text-white hover:bg-violet-500"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#5d2ab7] text-white text-sm font-medium hover:bg-[#4a1f96] transition"
           >
             <Upload className="w-4 h-4" /> Upload
           </button>
@@ -1299,18 +1457,19 @@ PGFR00000000,Bordetella bronchiseptica,2025-08-11,One Day One Genome,"aac(3)-IIa
                 "text/csv"
               )
             }
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 hover:bg-white/[0.06]"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#d0d9f5] bg-white text-sm text-[#111111] hover:bg-[#f4f6ff] transition"
           >
             Download CSV template
           </button>
         </div>
-        {!!uMessage && <div className="mt-3 text-sm">{uMessage}</div>}
+        {!!uMessage && (
+          <div className="mt-3 text-sm text-gray-700">{uMessage}</div>
+        )}
       </Modal>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-10 text-center text-sm text-zinc-400">
-        Built by Bharat Genome Database · BRIC–NIBMG aligned · v0.3
-        (Teams-ready)
+      <footer className="border-t border-[#d0d9f5] py-8 text-center text-sm text-gray-500">
+        Built by Bharat Genome Database · BRIC–NIBMG aligned · v0.3 (Teams-ready)
       </footer>
     </main>
   );
@@ -1319,9 +1478,9 @@ PGFR00000000,Bordetella bronchiseptica,2025-08-11,One Day One Genome,"aac(3)-IIa
 // ---------- Small helper components ----------
 function InfoCard({ k, v }: { k: string; v: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 p-4 bg-white/[0.04]">
-      <div className="text-sm text-zinc-400">{k}</div>
-      <div className="text-xl font-semibold text-white">{v}</div>
+    <div className="rounded-2xl border border-[#d0d9f5] p-4 bg-white">
+      <div className="text-xs text-gray-500 uppercase tracking-wide">{k}</div>
+      <div className="text-xl font-semibold text-[#111111] mt-1">{v}</div>
     </div>
   );
 }
@@ -1335,15 +1494,15 @@ function CaseCard({
   links?: { label: string; href: string }[];
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 p-4 bg-white/[0.04]">
-      <div className="font-medium">{title}</div>
-      <p className="text-sm text-zinc-300 mt-1">{body}</p>
+    <div className="rounded-2xl border border-[#d0d9f5] p-4 bg-white">
+      <div className="font-medium text-[#111111]">{title}</div>
+      <p className="text-sm text-gray-700 mt-1 leading-relaxed">{body}</p>
       {!!links?.length && (
-        <div className="mt-3 flex gap-3 flex-wrap">
+        <div className="mt-3 flex gap-3 flex-wrap text-sm">
           {links.map((l) => (
             <a
               key={l.href}
-              className="underline text-violet-300"
+              className="underline text-[#5d2ab7]"
               href={l.href}
               target="_blank"
               rel="noreferrer"
@@ -1361,7 +1520,6 @@ function CaseCard({
 function JBrowseEmbed({ rows }: { rows: any[] }) {
   const [acc, setAcc] = useState(rows[0]?.accession ?? "");
   const selected = rows.find((r) => r.accession === acc);
-  // Point this to your hosted JBrowse instance/session config
   const url = selected
     ? `/jbrowse/?assembly=${encodeURIComponent(
         selected.organism
@@ -1369,9 +1527,9 @@ function JBrowseEmbed({ rows }: { rows: any[] }) {
     : "/jbrowse/";
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <select
-          className="px-3 py-2 rounded-xl bg-white/5 ring-1 ring-white/10"
+          className="px-3 py-2 rounded-xl bg-white border border-[#d0d9f5] text-sm"
           value={acc}
           onChange={(e) => setAcc(e.target.value)}
         >
@@ -1382,7 +1540,7 @@ function JBrowseEmbed({ rows }: { rows: any[] }) {
           ))}
         </select>
         <a
-          className="text-violet-300 underline"
+          className="text-sm text-[#5d2ab7] underline"
           href={url}
           target="_blank"
           rel="noreferrer"
@@ -1390,12 +1548,13 @@ function JBrowseEmbed({ rows }: { rows: any[] }) {
           Open in new tab
         </a>
       </div>
-      <div className="h-[520px] rounded-2xl overflow-hidden border border-white/10 bg-white/[0.04]">
+      <div className="h-[520px] rounded-2xl overflow-hidden border border-[#d0d9f5] bg-white">
         <iframe src={url} className="w-full h-full" loading="lazy" />
       </div>
-      <div className="text-xs text-zinc-400">
-        Backend idea: <code>GET /api/jbrowse/session?acc=...</code> → returns a
-        JBrowse session JSON with tracks (FASTA, GFF, BAM/CRAM, BigWig).
+      <div className="text-xs text-gray-600">
+        Backend idea:{" "}
+        <code>GET /api/jbrowse/session?acc=...</code> → returns a JBrowse
+        session JSON with tracks (FASTA, GFF, BAM/CRAM, BigWig).
       </div>
     </div>
   );
